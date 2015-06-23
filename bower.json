@@ -1,0 +1,22 @@
+{
+  "name": "singalong",
+  "version": "0.0.0",
+  "authors": [
+    "Tim Nunamaker <tim.nunamaker@bazaarvoice.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "phaser": "~2.3.0",
+    "lodash": "~3.8.0",
+    "teoria": "~1.9.0",
+    "d3": "~3.5.5"
+  }
+}
