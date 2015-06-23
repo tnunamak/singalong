@@ -16,10 +16,15 @@ var label;
 
 var LOWER_BOUND = 0;
 var UPPER_BOUND = 3000;
+//var UPPER_BOUND = 20000;
 // var A_PITCH = 432;
 var A_PITCH = 440;
 var recorded = [];
 var recordEvery = 50;
+
+function clamp(min, max, num) {
+  return Math.min(Math.max(num, min), max);
+}
 
 function noteData( frequency ) {
   var noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -48,7 +53,6 @@ game_state.main.prototype = {
 
     preload: function() {
 	// Function called first to load all the assets
-        // game.load.image('hello', './images/hello.png');
     },
 
     create: function() {
@@ -71,6 +75,7 @@ game_state.main.prototype = {
     },
 
     update: _.throttle(function() {
+        var diameter = circleRadius * 2;
         function getNoteY(freq) {
           var data = noteData(freq);
           var position = clamp(0, 1, (freq - LOWER_BOUND) / (UPPER_BOUND - LOWER_BOUND));
@@ -94,16 +99,13 @@ game_state.main.prototype = {
           return freq.vol;
         });
 
-        if(maxFreq.vol > -190) {
-        // if(maxFreq.vol > -60) {
+        circles.clear();
+
+        //if(maxFreq.vol > -120) {
+        if(maxFreq.vol > -60) {
           var data = noteData(maxFreq.freq); // todo use a better name
-          var diameter = circleRadius * 2;
-          function clamp(min, max, num) {
-              return Math.min(Math.max(num, min), max);
-          }
 
           label.text = Math.round(maxFreq.freq) + ' ♪ ' + data.note + ' err ' + data.centsOff;
-          circles.clear();
           circles.beginFill(getNoteColor(data));
           circles.drawCircle(0, getNoteY(maxFreq.freq), diameter);
 
@@ -118,8 +120,9 @@ game_state.main.prototype = {
 
         var toRemove = 0;
         _.each(_.rest(recorded), function(freq) {
-          var d = diameter / 5;
+          var d = diameter / 7;
           var offset = -((1.1 * d * (roundToNearest(now - freq.time, recordEvery)/recordEvery)) + circleRadius);
+
           if(circles.x + offset >= 0) {
             circles.beginFill(getNoteColor(noteData(freq.maxFreq.freq)));
             circles.drawCircle(offset, getNoteY(freq.maxFreq.freq), d);
@@ -166,15 +169,12 @@ if(hasGetUserMedia) {
       console.log(e.inputBuffer.getChannelData(0));
     };
 
-    microphone.connect(analyser);
-    // analyser.connect(context.destination);
-
-    var freqDomain;
     start(function() {
-      var old = freqDomain;
+      // It's really lame to recreate analyser every time but for some reason it seemed to be using stale data
       freqDomain = new Float32Array(analyser.frequencyBinCount);
       analyser.getFloatFrequencyData(freqDomain);
-      console.log(_.difference(freqDomain, old))
+      analyser = context.createAnalyser();
+      microphone.connect(analyser);
       return freqDomain;
     });
   }, function(err) {
